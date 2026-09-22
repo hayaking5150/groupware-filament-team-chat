@@ -2,7 +2,7 @@
 
 namespace Filament\TeamChat\Notifications;
 
-use Filament\Notifications\Actions\Action;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
 use Filament\TeamChat\Models\Conversation;
 use Filament\TeamChat\Models\Message;
