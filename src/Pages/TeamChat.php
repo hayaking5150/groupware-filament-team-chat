@@ -6,18 +6,30 @@ use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Livewire\Attributes\On;
+use UnitEnum;
 
 class TeamChat extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-chat-bubble-left-right';
 
-    protected static ?string $navigationLabel = 'Team Chat';
-
-    protected static ?string $title = 'Team Chat';
-
     protected static ?string $slug = 'team-chat';
 
     protected static ?int $navigationSort = 1;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('team-chat::messages.page_title');
+    }
+
+    public function getTitle(): string
+    {
+        return __('team-chat::messages.page_title');
+    }
+
+    public static function getNavigationGroup(): string|UnitEnum|null
+    {
+        return __('team-chat::messages.nav_group');
+    }
 
     protected string $view = 'team-chat::pages.team-chat';
 

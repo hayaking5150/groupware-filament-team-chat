@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'page_title' => 'Team Chat',
+    'nav_group' => 'Communication',
+
     // Sidebar
     'channels' => 'Channels',
     'browse_channels' => 'Browse channels',

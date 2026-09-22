@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'page_title' => 'チャット',
+    'nav_group' => 'コミュニケーション',
+
     // Sidebar
     'channels' => 'チャンネル',
     'browse_channels' => 'チャンネルを閲覧',
