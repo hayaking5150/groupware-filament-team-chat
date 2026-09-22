@@ -68,4 +68,11 @@ return [
     // Conversation
     'group_dm' => 'グループDM',
     'direct_message' => 'ダイレクトメッセージ',
+
+    // Notifications (Filament bell)
+    'notification' => [
+        'mentioned_title' => ':name さんがあなたにメンションしました',
+        'dm_title' => ':name さんからメッセージが届きました',
+        'open' => 'チャットを開く',
+    ],
 ];

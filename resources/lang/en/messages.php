@@ -68,4 +68,11 @@ return [
     // Conversation
     'group_dm' => 'Group DM',
     'direct_message' => 'Direct Message',
+
+    // Notifications (Filament bell)
+    'notification' => [
+        'mentioned_title' => ':name mentioned you',
+        'dm_title' => ':name sent you a message',
+        'open' => 'Open chat',
+    ],
 ];

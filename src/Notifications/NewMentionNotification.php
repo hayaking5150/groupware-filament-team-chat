@@ -2,11 +2,15 @@
 
 namespace Filament\TeamChat\Notifications;
 
+use Filament\Notifications\Actions\Action;
+use Filament\Notifications\Notification as FilamentNotification;
 use Filament\TeamChat\Models\Message;
+use Filament\TeamChat\Pages\TeamChat;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class NewMentionNotification extends Notification
+class NewMentionNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -24,18 +28,24 @@ class NewMentionNotification extends Notification
     }
 
     /**
+     * Shaped for Filament's own notification bell, which every panel user
+     * already has (the host app enables it on its single panel).
+     *
      * @return array<string, mixed>
      */
-    public function toArray(object $notifiable): array
+    public function toDatabase(object $notifiable): array
     {
-        return [
-            'message_id' => $this->message->id,
-            'sender_id' => $this->message->user_id,
-            'sender_name' => $this->message->user?->name ?? 'Unknown',
-            'body_preview' => str($this->message->body)->limit(100)->toString(),
-            'mention_type' => $this->mentionType,
-            'messageable_type' => $this->message->messageable_type,
-            'messageable_id' => $this->message->messageable_id,
-        ];
+        $this->message->loadMissing('user');
+
+        return FilamentNotification::make()
+            ->title(__('team-chat::messages.notification.mentioned_title', ['name' => $this->message->user?->name ?? '']))
+            ->body(str($this->message->body)->limit(120)->toString())
+            ->actions([
+                Action::make('open')
+                    ->label(__('team-chat::messages.notification.open'))
+                    ->url(TeamChat::getUrl())
+                    ->markAsRead(),
+            ])
+            ->getDatabaseMessage();
     }
 }

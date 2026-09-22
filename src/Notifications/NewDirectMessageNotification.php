@@ -2,12 +2,16 @@
 
 namespace Filament\TeamChat\Notifications;
 
+use Filament\Notifications\Actions\Action;
+use Filament\Notifications\Notification as FilamentNotification;
 use Filament\TeamChat\Models\Conversation;
 use Filament\TeamChat\Models\Message;
+use Filament\TeamChat\Pages\TeamChat;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class NewDirectMessageNotification extends Notification
+class NewDirectMessageNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -27,14 +31,19 @@ class NewDirectMessageNotification extends Notification
     /**
      * @return array<string, mixed>
      */
-    public function toArray(object $notifiable): array
+    public function toDatabase(object $notifiable): array
     {
-        return [
-            'message_id' => $this->message->id,
-            'conversation_id' => $this->conversation->id,
-            'sender_id' => $this->message->user_id,
-            'sender_name' => $this->message->user?->name ?? 'Unknown',
-            'body_preview' => str($this->message->body)->limit(100)->toString(),
-        ];
+        $this->message->loadMissing('user');
+
+        return FilamentNotification::make()
+            ->title(__('team-chat::messages.notification.dm_title', ['name' => $this->message->user?->name ?? '']))
+            ->body(str($this->message->body)->limit(120)->toString())
+            ->actions([
+                Action::make('open')
+                    ->label(__('team-chat::messages.notification.open'))
+                    ->url(TeamChat::getUrl())
+                    ->markAsRead(),
+            ])
+            ->getDatabaseMessage();
     }
 }
