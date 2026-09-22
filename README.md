@@ -291,3 +291,38 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+
+## Fork notes (groupware)
+
+This is a fork maintained for the [groupware](https://github.com/hayaking5150) internal
+communication tool, kept because the upstream project is small and its long-term
+maintenance is uncertain. It diverges from upstream in ways that matter for anyone
+tracking this fork:
+
+- **Private channels and DMs are now actually private.** Upstream's Livewire
+  components (`Sidebar`, `MessageFeed`, `MessageComposer`, `ThreadPanel`) took a
+  channel/conversation id from a dispatched browser event or a public method
+  argument and trusted it. Any signed-in user could read or post into a private
+  channel or someone else's DM by dispatching the event directly, bypassing the
+  UI. Every entry point now calls `Channel::isAccessibleBy()` /
+  `Conversation::isParticipant()`, and `SendMessage` checks again at the point a
+  message is actually created, so the write path is safe even if a future caller
+  forgets to check.
+- **Message bodies are XSS-safe.** `Str::markdown()` was called with default
+  options, which allow raw HTML straight through (`html_input` defaults to
+  `allow` in league/commonmark) and are rendered with `{!! !!}`. A message
+  containing `<script>` executed for everyone who read it. Markdown is now
+  rendered with `html_input: escape`.
+- **Attachments are private by default and always served through an authorizing
+  route** (`AttachmentDownloadController`, registered as
+  `team-chat.attachments.download`), not the storage disk's own URL. The default
+  disk changed from `public` to `local`; `Attachment::getUrl()` no longer calls
+  `Storage::url()` directly.
+- Deactivated users (`deactivated_at` on the host app's user model) are excluded
+  from the DM candidate list, mention suggestions and `startDirectMessage`'s
+  validation.
+- Default polling intervals changed to 5s (messages) / 15s (sidebar) for a
+  ~100-user deployment.
+
+See the upstream project at https://github.com/qalainau/filament-team-chat for
+the original. Licensed MIT, same as upstream.

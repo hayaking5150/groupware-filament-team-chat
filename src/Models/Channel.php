@@ -70,4 +70,21 @@ class Channel extends Model
     {
         return $this->archived_at !== null;
     }
+
+    public function isMember(int $userId): bool
+    {
+        return $this->members()->where('user_id', $userId)->exists();
+    }
+
+    /**
+     * Whether this user may read and post here: any member of a private
+     * channel, or anyone at all for a public one, who is joined on first
+     * access. Livewire methods are callable from the browser with any id, so
+     * this is checked again at every entry point rather than trusted from
+     * what the sidebar happens to show.
+     */
+    public function isAccessibleBy(int $userId): bool
+    {
+        return $this->isPublic() || $this->isMember($userId);
+    }
 }

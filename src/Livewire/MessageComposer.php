@@ -42,6 +42,10 @@ class MessageComposer extends Component
     #[On('channel-selected')]
     public function setChannel(int $channelId): void
     {
+        $channel = Channel::findOrFail($channelId);
+
+        abort_unless($channel->isAccessibleBy(auth()->id()), 403);
+
         $this->messageableType = Channel::class;
         $this->messageableId = $channelId;
         $this->resetComposer();
@@ -50,6 +54,10 @@ class MessageComposer extends Component
     #[On('conversation-selected')]
     public function setConversation(int $conversationId): void
     {
+        $conversation = Conversation::findOrFail($conversationId);
+
+        abort_unless($conversation->isParticipant(auth()->id()), 403);
+
         $this->messageableType = Conversation::class;
         $this->messageableId = $conversationId;
         $this->resetComposer();
@@ -84,7 +92,8 @@ class MessageComposer extends Component
 
         $userModel = config('team-chat.user_model');
 
-        $query = $userModel::where('id', '!=', auth()->id());
+        $query = $userModel::where('id', '!=', auth()->id())
+            ->whereNull('deactivated_at');
 
         if ($this->mentionQuery !== '') {
             $query->where('name', 'like', $this->mentionQuery.'%');

@@ -44,6 +44,11 @@ class Conversation extends Model
         return $this->morphMany(Message::class, 'messageable');
     }
 
+    public function isParticipant(int $userId): bool
+    {
+        return $this->participants()->where('user_id', $userId)->exists();
+    }
+
     public function getDisplayNameForUser(Model $user): string
     {
         if ($this->is_group && $this->name) {

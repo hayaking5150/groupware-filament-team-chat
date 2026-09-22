@@ -3,6 +3,8 @@
 namespace Filament\TeamChat\Livewire;
 
 use Filament\TeamChat\Actions\SendMessage;
+use Filament\TeamChat\Models\Channel;
+use Filament\TeamChat\Models\Conversation;
 use Filament\TeamChat\Models\Message;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Isolate;
@@ -28,9 +30,30 @@ class ThreadPanel extends Component
     #[On('open-thread')]
     public function loadThread(int $messageId): void
     {
+        $message = Message::with(['user', 'messageable'])->findOrFail($messageId);
+
+        abort_unless($this->accessible($message), 403);
+
         $this->parentMessageId = $messageId;
-        $this->parentMessage = Message::with('user')->find($messageId);
+        $this->parentMessage = $message;
         $this->replyBody = '';
+    }
+
+    /**
+     * A thread can be opened for any message id via a dispatched browser
+     * event, not only one from the feed currently on screen, so this is
+     * checked again here rather than trusted from the caller.
+     */
+    private function accessible(Message $message): bool
+    {
+        $messageable = $message->messageable;
+        $userId = auth()->id();
+
+        return match (true) {
+            $messageable instanceof Channel => $messageable->isAccessibleBy($userId),
+            $messageable instanceof Conversation => $messageable->isParticipant($userId),
+            default => false,
+        };
     }
 
     public function getRepliesProperty(): Collection

@@ -34,6 +34,10 @@ class MessageFeed extends Component
     #[On('channel-selected')]
     public function loadChannel(int $channelId): void
     {
+        $channel = Channel::findOrFail($channelId);
+
+        abort_unless($channel->isAccessibleBy(auth()->id()), 403);
+
         $this->messageableType = Channel::class;
         $this->messageableId = $channelId;
         $this->lastMessageId = 0;
@@ -42,6 +46,10 @@ class MessageFeed extends Component
     #[On('conversation-selected')]
     public function loadConversation(int $conversationId): void
     {
+        $conversation = Conversation::findOrFail($conversationId);
+
+        abort_unless($conversation->isParticipant(auth()->id()), 403);
+
         $this->messageableType = Conversation::class;
         $this->messageableId = $conversationId;
         $this->lastMessageId = 0;
@@ -133,7 +141,7 @@ class MessageFeed extends Component
 
         $message->update([
             'body' => $this->editBody,
-            'body_html' => Str::markdown($this->editBody),
+            'body_html' => Str::markdown($this->editBody, ['html_input' => 'escape', 'allow_unsafe_links' => false]),
             'edited_at' => now(),
         ]);
 

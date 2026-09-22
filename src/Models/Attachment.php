@@ -4,7 +4,6 @@ namespace Filament\TeamChat\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 class Attachment extends Model
 {
@@ -23,9 +22,13 @@ class Attachment extends Model
         return $this->belongsTo(Message::class);
     }
 
+    /**
+     * A signed, authorizing link, never the storage disk's own (unsigned,
+     * and on the public disk, world-readable) URL.
+     */
     public function getUrl(): string
     {
-        return Storage::disk($this->getDisk())->url($this->file_path);
+        return route('team-chat.attachments.download', $this);
     }
 
     public function isImage(): bool
@@ -46,10 +49,5 @@ class Attachment extends Model
         }
 
         return $bytes.' B';
-    }
-
-    protected function getDisk(): string
-    {
-        return config('team-chat.uploads.disk', 'public');
     }
 }

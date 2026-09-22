@@ -2,6 +2,8 @@
 
 namespace Filament\TeamChat;
 
+use Filament\TeamChat\Http\Controllers\AttachmentDownloadController;
+use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -37,5 +39,12 @@ class FilamentTeamChatServiceProvider extends PackageServiceProvider
             classNamespace: 'Filament\\TeamChat\\Livewire',
             classPath: __DIR__.'/Livewire',
         );
+
+        // Attachments are private: this is the only URL that ever points at
+        // one, and it authorizes before redirecting to a signed storage URL.
+        Route::middleware('web')
+            ->get('/team-chat/attachments/{attachment}', AttachmentDownloadController::class)
+            ->middleware('auth')
+            ->name('team-chat.attachments.download');
     }
 }

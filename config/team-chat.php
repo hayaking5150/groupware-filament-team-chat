@@ -30,19 +30,24 @@ return [
     |--------------------------------------------------------------------------
     */
     'polling' => [
-        'messages' => 3,
-        'sidebar' => 5,
+        'messages' => 5,
+        'sidebar' => 15,
     ],
 
     /*
     |--------------------------------------------------------------------------
     | Upload Settings
     |--------------------------------------------------------------------------
+    |
+    | The disk must be private: every attachment is served through the
+    | authorizing download route, never by its own storage URL.
+    |
     */
     'uploads' => [
-        'disk' => 'public',
+        'disk' => 'local',
         'directory' => 'team-chat-attachments',
         'max_size' => 10240, // KB
+        'url_lifetime_minutes' => 10,
     ],
 
     /*

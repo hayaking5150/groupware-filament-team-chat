@@ -3,11 +3,13 @@
 namespace Filament\TeamChat\Livewire;
 
 use Filament\TeamChat\Models\Channel;
+use Filament\TeamChat\Models\Conversation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Isolate;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Illuminate\Validation\Rule;
 
 #[Isolate]
 class Sidebar extends Component
@@ -28,8 +30,10 @@ class Sidebar extends Component
     {
         $channel = Channel::findOrFail($channelId);
 
+        abort_unless($channel->isAccessibleBy(auth()->id()), 403);
+
         // Auto-join public channels on first access
-        if ($channel->isPublic() && ! $channel->members()->where('user_id', auth()->id())->exists()) {
+        if ($channel->isPublic() && ! $channel->isMember(auth()->id())) {
             $channel->members()->attach(auth()->id(), ['role' => 'member']);
         }
 
@@ -47,6 +51,10 @@ class Sidebar extends Component
 
     public function selectConversation(int $conversationId): void
     {
+        $conversation = Conversation::findOrFail($conversationId);
+
+        abort_unless($conversation->isParticipant(auth()->id()), 403);
+
         $this->activeType = 'conversation';
         $this->activeId = $conversationId;
         $this->dispatch('conversation-selected', conversationId: $conversationId);
@@ -89,7 +97,11 @@ class Sidebar extends Component
     public function startDirectMessage(): void
     {
         $this->validate([
-            'dmUserId' => 'required|exists:users,id',
+            'dmUserId' => [
+                'required',
+                Rule::notIn([auth()->id()]),
+                Rule::exists('users', 'id')->whereNull('deactivated_at'),
+            ],
         ]);
 
         $conversation = auth()->user()->findOrCreateDirectMessage($this->dmUserId);
@@ -161,6 +173,7 @@ class Sidebar extends Component
         $userModel = config('team-chat.user_model');
 
         return $userModel::where('id', '!=', auth()->id())
+            ->whereNull('deactivated_at')
             ->orderBy('name')
             ->get(['id', 'name']);
     }
